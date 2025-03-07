@@ -111,9 +111,11 @@
 
 
 
+                        {{-- conversation div start --}}
                         <div class="flex flex-col flex-auto h-full p-6">
                             <h2 class=" text-center">{{ $current_receiver_user?->name }}</h2>
-                            <div class="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-gray-100 h-full p-4">
+                            <div id="conversation_container"
+                                class="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-gray-100 h-full p-4">
 
                                 <div class="flex flex-col h-full overflow-x-auto mb-4">
                                     <div class="flex flex-col h-full">
@@ -122,7 +124,7 @@
                                         <div class="grid grid-cols-12 gap-y-2">
 
                                             @if (count($all_conversations) > 0)
-                                                @foreach ($all_conversations as $item)
+                                                @foreach ($all_conversations as $key => $item)
                                                     @if ($item['sender_id'] !== auth()->user()->id)
                                                         {{-- receiver conversation start --}}
                                                         <div class="col-start-1 col-end-8 p-3 rounded-lg">
@@ -231,10 +233,19 @@
 
 
 
+                                {{-- typing indecator start --}}
+                                <div class="ticontainer pe-4 flex justify-end" style="display: none;">
+                                    <div class="tiblock">
+                                        <div class="tidot"></div>
+                                        <div class="tidot"></div>
+                                        <div class="tidot"></div>
+                                    </div>
+                                </div>
+                                {{-- typing indecator end --}}
 
 
                                 {{-- message form start --}}
-                                <div x-data="{ visible: {{ request()->query('receiver_id') ? 'true' : 'false' }} }">
+                                <div x-data="{ visible: {{ request()->query('receiver_id') ? 'true' : 'false' }} }" x-cloak>
                                     <form x-show="visible" wire:submit.prevent="sendMessage"
                                         class="flex flex-row items-center h-16 rounded-xl bg-white w-full px-4">
                                         <div>
@@ -252,12 +263,9 @@
                                         <div class="flex-grow ml-4">
                                             <div class="relative w-full">
                                                 {{-- message field start --}}
-                                                <input type="text" wire:model.defer="text"
+                                                <input wire:keydown='userTyping' type="text" wire:model.defer="text"
                                                     class="flex w-full border rounded-xl focus:outline-none focus:border-indigo-300 pl-4 h-10"
                                                     placeholder="Enter new message" />
-
-                                                {{-- Hidden input for receiver_id --}}
-                                                {{-- <input type="hidden" wire:model="receiver_id"> --}}
 
                                                 <button
                                                     class="absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600">
@@ -303,6 +311,10 @@
 
                             </div>
                         </div>
+                        {{-- conversation div end --}}
+
+
+
                     </div>
                 </div>
 
@@ -310,3 +322,36 @@
         </div>
     </div>
 </div>
+
+
+
+<script type="module">
+    let timeout = null;
+    window.Echo.private(`chat-typing-channel.{{ $sender_id }}`).listen('UserTypingEvent', (event) => {
+        document.getElementsByClassName('ticontainer')[0].style.display = 'block';
+
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+            document.getElementsByClassName('ticontainer')[0].style.display = 'none';
+        }, 2000);
+
+    });
+
+
+
+    let chatContainer = document.getElementById('conversation_container');
+
+    function scrollToBottom() {
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }
+
+    Livewire.on('message-updated', function() {
+        setTimeout(scrollToBottom, 100); // Ensure DOM updates first
+    });
+
+    // Ensure chat scrolls to the bottom on page load
+    window.addEventListener('load', scrollToBottom);
+
+</script>

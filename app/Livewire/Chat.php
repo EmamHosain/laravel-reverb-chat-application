@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Events\MessageSentEvent;
+use App\Events\UserTypingEvent;
 use App\Models\MessageList;
 use App\Models\User;
 use App\Models\Message;
@@ -87,10 +88,15 @@ class Chat extends Component
         $messages = Message::with(['sender:id,name', 'receiver:id,name'])
 
             ->where(function ($query) {
+
+                // data will come from the sender
                 $query->where('sender_id', $this->sender_id)
                     ->where('receiver_id', $this->receiver_id);
             })
+
             ->orWhere(function ($query) {
+
+                // data will come from the receiver
                 $query->where('sender_id', $this->receiver_id)
                     ->where('receiver_id', $this->sender_id);
             })
@@ -122,9 +128,12 @@ class Chat extends Component
         $this->reset('text');
         broadcast(new MessageSentEvent($message))->toOthers();
 
+
+        $this->dispatch('message-updated');
+
     }
 
-    #[On('echo-private:chat.{sender_id},MessageSentEvent')]  // sender_id is current auth user id
+    #[On('echo-private:chat-channel.{sender_id},MessageSentEvent')]  // sender_id is current auth user id
     public function listenForMessage($event)
     {
         //    dd($event);
@@ -149,6 +158,13 @@ class Chat extends Component
         // dd($this->all_conversations);
     }
 
+
+    public function userTyping()
+    {
+        // dd($this->text);
+        broadcast(new UserTypingEvent($this->sender_id,$this->receiver_id));
+        // dd($this->text);
+    }
     public function render()
     {
         return view('livewire.chat')->layout('layouts.app');

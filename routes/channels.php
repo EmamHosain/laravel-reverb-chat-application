@@ -7,8 +7,12 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-
-Broadcast::channel('chat.{userId}', function (User $user, $userId) {
-    // dd($user);
+// chat channel
+Broadcast::channel('chat-channel.{userId}', function (User $user, $userId) {
     return (int) $user->id === (int) $userId;
+});
+
+
+Broadcast::channel('chat-typing-channel.{receiver_id}', function (User $user, $receiver_id) {
+    return (int) $user->id === (int) $receiver_id;
 });
