@@ -145,11 +145,24 @@
                                                                     <div>{{ $item['message'] }}</div>
                                                                 </div>
                                                             </div>
+
+                                                            <img src="{{ asset('./storage/' . $item['file']) }}"
+                                                                alt="">
+
+
                                                         </div>
                                                         {{-- receiver conversation end --}}
                                                     @else
                                                         {{-- sender conversation start --}}
                                                         <div class="col-start-6 col-end-13 p-3 rounded-lg">
+  
+                                                            @if (!empty($item['file']))
+                                                                <div class="my-2">
+                                                                    <img src="{{ asset('./storage/' . $item['file']) }}"
+                                                                        alt="">
+                                                                </div>
+                                                            @endif
+
                                                             <div
                                                                 class="flex items-center justify-start flex-row-reverse">
                                                                 <div
@@ -161,6 +174,7 @@
                                                                     <div>{{ $item['message'] }}</div>
                                                                 </div>
                                                             </div>
+                                                          
                                                         </div>
                                                         {{-- sender conversation end --}}
                                                     @endif
@@ -255,8 +269,43 @@
                                 <div x-data="{ visible: {{ request()->query('receiver_id') ? 'true' : 'false' }} }" x-cloak>
                                     <form x-show="visible" wire:submit.prevent="sendMessage"
                                         class="flex flex-row items-center h-16 rounded-xl bg-white w-full px-4">
-                                        <div>
-                                            <button
+
+
+                                        @if ($file)
+
+                                            @php
+                                                $is_type_image = str_starts_with($file->getMimeType(), 'image/')
+                                                    ? true
+                                                    : false;
+                                            @endphp
+
+                                            @if ($is_type_image)
+                                                <div class="relative">
+                                                    <img src="{{ $file->temporaryUrl() }}" alt=""
+                                                        class="w-12 h-12 me-3">
+                                                    <button type="button" wire:click='removeImage'
+                                                        class=" text-xl text-red-500 absolute top-[-5px] left-1">x</button>
+                                                </div>
+                                            @else
+                                                <div class=" flex items-center">
+                                                    <button type="button" wire:click='removeImage'
+                                                        class=" text-xl text-red-500 mb-1 me-1">x</button>
+                                                    <span>{{ $file->getClientOriginalName() }}</span>
+
+                                                </div>
+                                            @endif
+
+
+
+                                        @endif
+
+
+                                        <div x-data>
+
+                                            {{-- file --}}
+                                            <input type="file" class="hidden" wire:model='file' name=""
+                                                id="file">
+                                            <button type="button" @click="document.getElementById('file').click()"
                                                 class="flex items-center justify-center text-gray-400 hover:text-gray-600">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -267,10 +316,14 @@
                                                 </svg>
                                             </button>
                                         </div>
+
+
+
                                         <div class="flex-grow ml-4">
                                             <div class="relative w-full">
                                                 {{-- message field start --}}
-                                                <input wire:keydown='userTyping' type="text" wire:model.defer="text"
+                                                <input wire:keydown='userTyping' type="text"
+                                                    wire:model.defer="text"
                                                     class="flex w-full border rounded-xl focus:outline-none focus:border-indigo-300 pl-4 h-10"
                                                     placeholder="Enter new message" />
 
@@ -335,8 +388,8 @@
 <script type="module">
     let timeout = null;
     window.Echo.private(`chat-typing-channel.{{ $sender_id }}`).listen('UserTypingEvent', (event) => {
-        
-        let typingIndicator = document.querySelector('.ticontainer'); 
+
+        let typingIndicator = document.querySelector('.ticontainer');
         if (typingIndicator) {
             typingIndicator.style.display = 'block';
 

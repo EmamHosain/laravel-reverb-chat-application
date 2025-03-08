@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->foreignId('receiver_id');
             $table->text('text');
             $table->integer('is_read')->default(false);
+            $table->text('file')->nullable();
             $table->timestamps();
         });
     }

@@ -11,9 +11,12 @@ use App\Models\Message;
 use Carbon\Carbon;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Chat extends Component
 {
+    use WithFileUploads;
+    public $file;
     public $text;
     public $all_conversations = [];
     public $sender_id;
@@ -24,6 +27,14 @@ class Chat extends Component
 
     public $current_receiver_user;
 
+    /**
+     * Function: removeImage
+     * @return void
+     */
+    public function removeImage()
+    {
+        $this->file = null; // Reset file
+    }
     public function mount()
     {
 
@@ -123,15 +134,27 @@ class Chat extends Component
     {
         $this->validate();
 
+        $filePath = null;
+
+        // Store file if uploaded
+        if ($this->file) {
+            // path url messages/LnGCoSG58mtQ4mZ7QlVDBU872A4mZOTivOlIbOz5.png
+            $filePath = $this->file->store('messages', 'public'); // Saves in storage/app/public/messages
+        }
+
+
+
         $message = Message::create([
             'sender_id' => $this->sender_id,
             'receiver_id' => $this->receiver_id,
             'text' => $this->text,
+            'file' => $filePath ?? null,
         ]);
 
         $msg = Message::with('sender:id,name', 'receiver:id,name')->where('id', $message->id)->first();
         $this->appendChatMessages($msg);
-        $this->reset('text');
+        $this->reset('text', 'file');
+
         broadcast(new MessageSentEvent($message))->toOthers();
 
 
@@ -165,6 +188,7 @@ class Chat extends Component
             'sender' => $msg->sender->name,
             'receiver' => $msg->receiver->name,
             'sender_id' => $msg->sender->id,
+            'file' => $msg->file,
         ];
 
         // dd($this->all_conversations);
