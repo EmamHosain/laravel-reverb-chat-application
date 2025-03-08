@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\User;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use App\Events\UnReadMessageCountEvent;
 
 class Users extends Component
 {

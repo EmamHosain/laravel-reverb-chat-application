@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\UserAuthMiddleware;
 use App\Livewire\Chat;
 use App\Livewire\Users;
 use Illuminate\Support\Facades\Route;
@@ -14,5 +15,5 @@ require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', Users::class)->name('dashboard');
-    Route::get('/chat',Chat::class)->name('chat');
+    Route::get('/chat', Chat::class)->name('chat')->middleware(UserAuthMiddleware::class);
 });

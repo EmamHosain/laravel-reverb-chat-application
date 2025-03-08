@@ -70,10 +70,17 @@
                                                 </div>
                                                 <div class="ml-2 text-sm font-semibold">{{ $item->receiver->name }}
                                                 </div>
-                                                {{-- <div
-                                                    class="flex items-center justify-center ml-auto text-xs text-white bg-red-500 h-4 w-4 rounded leading-none">
-                                                    2
-                                                </div> --}}
+                                                @php
+                                                    $unread_msg_count = App\Models\Message::getUnreadMessagesCount(
+                                                        $item->receiver->id,
+                                                    );
+                                                @endphp
+                                                @if ($unread_msg_count > 0)
+                                                    <div
+                                                        class="flex items-center justify-center ml-auto text-xs text-white bg-red-500 h-4 w-4 rounded leading-none">
+                                                        {{ $unread_msg_count }}
+                                                    </div>
+                                                @endif
                                             </a>
                                         @endforeach
                                     @endif
@@ -328,12 +335,16 @@
 <script type="module">
     let timeout = null;
     window.Echo.private(`chat-typing-channel.{{ $sender_id }}`).listen('UserTypingEvent', (event) => {
-        document.getElementsByClassName('ticontainer')[0].style.display = 'block';
+        
+        let typingIndicator = document.querySelector('.ticontainer'); 
+        if (typingIndicator) {
+            typingIndicator.style.display = 'block';
 
-        clearTimeout(timeout)
-        timeout = setTimeout(() => {
-            document.getElementsByClassName('ticontainer')[0].style.display = 'none';
-        }, 2000);
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                typingIndicator.style.display = 'none';
+            }, 2000);
+        }
 
     });
 
@@ -353,5 +364,4 @@
 
     // Ensure chat scrolls to the bottom on page load
     window.addEventListener('load', scrollToBottom);
-
 </script>
